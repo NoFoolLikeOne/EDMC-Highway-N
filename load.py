@@ -87,9 +87,10 @@ def journal_entry(cmdr, system, station, entry):
 
     if entry['event'] == 'FSDJump':
 		this.status['text'] = 'Finding nearest neutron star...'	
-		
+		print system
 		radius = tk.StringVar(value=config.get("Range")).get()		
-		url = 'https://www.edsm.net/api-v1/sphere-systems?'+system+'&minRadius=0&radius='+radius+'&showPrimaryStar=1'		
+		url = 'https://www.edsm.net/api-v1/sphere-systems?systemName'+system+'&minRadius=0&radius='+radius+'&showPrimaryStar=1'		
+		print url
 		r = requests.get(url)
 		print r.status_code
 		
