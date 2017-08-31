@@ -89,7 +89,7 @@ def journal_entry(cmdr, system, station, entry):
 		this.status['text'] = 'Finding nearest neutron star...'	
 		print system
 		radius = tk.StringVar(value=config.get("Range")).get()		
-		url = 'https://www.edsm.net/api-v1/sphere-systems?systemName=1'+system+'&minRadius=0&radius='+radius+'&showPrimaryStar=1'		
+		url = 'https://www.edsm.net/api-v1/sphere-systems?systemName=1'+system+'&minRadius=0&radius='+radius+'&showPrimaryStar=1&filterPrimaryStar=N'		
 		print url
 		r = requests.get(url)
 		print r.status_code
