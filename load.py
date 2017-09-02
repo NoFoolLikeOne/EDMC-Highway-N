@@ -28,7 +28,8 @@ def plugin_start():
 	Load Template plugin into EDMC
 	"""
 	this.Range = tk.StringVar(value=config.get("Range"))
-	
+	this.nearest = tk.StringVar(value=config.get("Nearest"))
+	this.nextnearest = tk.StringVar(value=config.get("NextNearest"))
 	print myPlugin + "Loaded!"
 	
 	return myPlugin
@@ -58,8 +59,16 @@ def copy_text_to_clipboard(event):
 	
 def plugin_app(parent):
 	label = tk.Label(parent, text= myPlugin + ":")
-	this.status = tk.Label(parent, anchor=tk.W, text="Ready")
 	
+	try:
+		nearest = tk.StringVar(value=config.get("Nearest"))
+		label_text=nearest['name']
+	except:
+		label_text="Out of Range"
+		
+	this.status = tk.Label(parent, anchor=tk.W, text=label_text)
+	
+	# We should ideally make this conditional
 	this.status.bind("<Button-1>", copy_text_to_clipboard)  
 
 	return (label, this.status)
@@ -85,11 +94,14 @@ def prefs_changed():
 # Detect journal events
 def journal_entry(cmdr, system, station, entry):
 
-    if entry['event'] == 'FSDJump':
+    if entry['event'] == 'StartJump' and entry['JumpType'] == 'Hyperspace':
+
+			
+	
 		this.status['text'] = 'Finding nearest neutron star...'	
 		print system
 		radius = tk.StringVar(value=config.get("Range")).get()		
-		url = 'https://www.edsm.net/api-v1/sphere-systems?systemName=1'+system+'&minRadius=0&radius='+radius+'&showPrimaryStar=1&filterPrimaryStar=N'		
+		url = 'https://www.edsm.net/api-v1/sphere-systems?systemName='+system+'&minRadius=0&radius='+radius+'&showPrimaryStar=1&filterPrimaryStar=N'		
 		print url
 		r = requests.get(url)
 		print r.status_code
@@ -100,14 +112,22 @@ def journal_entry(cmdr, system, station, entry):
 		output_dict = [x for x in input_dict if x['primaryStar'] and x['primaryStar']['type'] == 'Neutron Star' ]
 		
 		print output_dict
-					
+		nearest	= { 'distance': 999, 'name': "Out of Range" } 
+		nextnearest	= { 'distance': 999, 'name': "Out of Range" } 
 		## what if there isnt any?
 		for sysrec in output_dict:
 			if float(nearest['distance']) >  sysrec['distance']:
-				nearest=sysrec
+				try:
+					nextnearest=nearest
+					nearest=sysrec
+				except:
+					print exception
 		
 		print nearest
+		print nextnearest
 		
+		config.set("Nearest", nearest)
+		config.set("NextNearest", nextnearest)
 		this.status['text'] = nearest['name']+' ('+str(nearest['distance'])+'ly) '
 
 # Update some data here too
