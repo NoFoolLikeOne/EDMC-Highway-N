@@ -33,6 +33,7 @@ threads=[]
 #this.edsm_data = None
 
 
+
 # Lets capture the plugin name we want the name - "EDMC -"
 myPlugin = os.path.basename(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))).split('-')[1]
 
@@ -49,6 +50,7 @@ except:
 
 	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.json') as bubble_file: 
 		bubble = json.load(bubble_file)	
+
 
 	
 def dumpUserStars():
@@ -179,18 +181,20 @@ def edsm_worker(system):
 	
 	print this.jumpsystem
 	
-	## we want to set our min range to 200-this.jump
+	## max range is the current nearest star or 200
 	
-	range=trunc(200-this.jump)
-	if range < 0:
-		range = 0
-	
-	if this.jump==0: 
-		range=0
+	try:
+		range=this.distance 
+		if range > 200:
+			range = 200
+	except:
+			range=200
+	if range == 0:
+		range = 200
 	
 	jumpSystem=quote_plus(this.jumpsystem["name"])
 	jumpSystem="Colonia"
-	url = 'https://www.edsm.net/api-v1/sphere-systems?systemName='+jumpSystem+'&minRadius='+str(range)+'&radius=200&showPrimaryStar=1&filterPrimaryStar=N&showCoordinates=1'
+	url = 'https://www.edsm.net/api-v1/sphere-systems?systemName='+jumpSystem+'&minRadius=0&radius='+str(range)+'&showPrimaryStar=1&filterPrimaryStar=N&showCoordinates=1'
 	print url
 	r = requests.get(url)
 	l = {}
