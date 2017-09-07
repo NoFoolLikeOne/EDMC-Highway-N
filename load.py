@@ -7,7 +7,7 @@ import requests
 import os
 import requests
 import json
-from  math import sqrt,pow
+from  math import sqrt,pow,trunc
 import threading
 from time import sleep
 from urllib import quote_plus
@@ -40,12 +40,16 @@ print os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.jso
 
 
 	
-	
-with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/userstars.json') as user_file: 
-	userstars = json.load(user_file)		
-	
-with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.json') as bubble_file: 
-	bubble = json.load(bubble_file)	
+try:		
+	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/userstars.json') as user_file: 
+		userstars = json.load(user_file)		
+except:
+	print "No user stars we can create a list later"
+	userstars = []
+
+	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.json') as bubble_file: 
+		bubble = json.load(bubble_file)	
+
 	
 def dumpUserStars():
 	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/userstars.json', 'w') as outfile:  
@@ -174,9 +178,19 @@ def edsm_worker(system):
 	print "in edsm_worker going to sleep"
 	
 	print this.jumpsystem
+	
+	## we want to set our min range to 200-this.jump
+	
+	range=trunc(200-this.jump)
+	if range < 0:
+		range = 0
+	
+	if this.jump==0: 
+		range=0
+	
 	jumpSystem=quote_plus(this.jumpsystem["name"])
 	jumpSystem="Colonia"
-	url = 'https://www.edsm.net/api-v1/sphere-systems?systemName='+jumpSystem+'&minRadius=0&radius=200&showPrimaryStar=1&filterPrimaryStar=N&showCoordinates=1'
+	url = 'https://www.edsm.net/api-v1/sphere-systems?systemName='+jumpSystem+'&minRadius='+str(range)+'&radius=200&showPrimaryStar=1&filterPrimaryStar=N&showCoordinates=1'
 	print url
 	r = requests.get(url)
 	l = {}
@@ -229,10 +243,11 @@ def setNearest(start,end=None):
 	print start
 	if not end == None:
 		print end
-		jump = getDistance(start["x"],start["y"],start["z"],end["x"],end["y"],end["z"])
+		this.jump = getDistance(start["x"],start["y"],start["z"],end["x"],end["y"],end["z"])
 		jumpSystem=end
 	else:
 		print "No jump"
+		this.jump = 0
 		jumpSystem=start
 		
 	if inBubble(jumpSystem):
@@ -285,14 +300,19 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 		# but what if we don't
 		
 		print "StartJump"
+		#if the last system was in the bubble then we can wait
+		
 		try:
 			##
 			this.jumpsystem = edsmGetSystem(system)	
 			this.foundsystem = True
 			setNearest(this.lastsystem,this.jumpSystem)
+			#we have jumped 
+			this.lastsystem = this.jumpSystem
 		except:
 			print "Failed to find system"
 			this.foundsystem = False
+		
 		
 	if entry['event'] == 'FSDJump':
 		#We can assume that we know the location of the current system
@@ -305,6 +325,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 		else:
 			this.jumpsystem = { "x": entry["StarPos"][0], "y": entry["StarPos"][1], "z": entry["StarPos"][2], "name": entry["StarSystem"] }
 			setNearest(this.lastsystem,this.jumpsystem)
+			# we have jumped
+			this.lastsystem = this.jumpSystem
 			
 	
 	
