@@ -31,7 +31,7 @@ this.frame = None
 threads=[]
 #this.edsm_session = None
 #this.edsm_data = None
-
+this.foundsystem = False
 
 
 # Lets capture the plugin name we want the name - "EDMC -"
@@ -61,7 +61,8 @@ def dumpUserStars(x):
 	
 
 def edsmGetSystem(system):
-	url = 'https://www.edsm.net/api-v1/system?systemName='+system+'&showCoordinates=1'		
+	
+	url = 'https://www.edsm.net/api-v1/system?systemName='+quote_plus(system)+'&showCoordinates=1'		
 	print url
 	r = requests.get(url)
 	s =  r.json()
@@ -329,9 +330,9 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 			##
 			this.jumpsystem = edsmGetSystem(system)	
 			this.foundsystem = True
-			setNearest(this.lastsystem,this.jumpSystem)
+			setNearest(this.lastsystem,this.jumpsystem)
 			#we have jumped 
-			this.lastsystem = this.jumpSystem
+			this.lastsystem = this.jumpsystem
 		except:
 			print "Failed to find system"
 			this.foundsystem = False
