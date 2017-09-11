@@ -43,19 +43,20 @@ print os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.jso
 	
 try:		
 	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/userstars.json') as user_file: 
-		userstars = json.load(user_file)		
+		this.userstars = json.load(user_file)		
 except:
 	print "No user stars we can create a list later"
-	userstars = []
+	this.userstars = []
 
-	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.json') as bubble_file: 
+with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/bubble.json') as bubble_file: 
 		bubble = json.load(bubble_file)	
 
 
 	
-def dumpUserStars():
+def dumpUserStars(x):
 	with open(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))+'/userstars.json', 'w') as outfile:  
-		 json.dump(userstars, outfile)	
+		 json.dump(x, outfile)	
+	print "dumpUserStars"
 
 	
 
@@ -87,7 +88,7 @@ def plugin_start():
 	this.nearest = 'No available'
 	this.distance = 999999
 	
-	this.userstars=userstars
+	#this.userstars=userstars
 	
 	print os.path.realpath(os.path.dirname(os.path.realpath(__file__)))
 	
@@ -192,20 +193,30 @@ def edsm_worker(system):
 	if range == 0:
 		range = 200
 	
+	print "in worker"
+	print this.jumpsystem
 	jumpSystem=quote_plus(this.jumpsystem["name"])
-	jumpSystem="Colonia"
+	
 	url = 'https://www.edsm.net/api-v1/sphere-systems?systemName='+jumpSystem+'&minRadius=0&radius='+str(range)+'&showPrimaryStar=1&filterPrimaryStar=N&showCoordinates=1'
 	print url
 	r = requests.get(url)
 	l = {}
-	for elem in userstars:
+	for elem in this.userstars:
 		name=elem["name"]
 		x=elem["x"]
 		y=elem["y"]
 		z=elem["z"]
 		l[name]={ "x": x, "y": y,"z": z} 
 		
+	for elem in bubble:
+		name=elem["name"]
+		x=elem["x"]
+		y=elem["y"]
+		z=elem["z"]
+		l[name]={ "x": x, "y": y,"z": z} 		
+		
 	for elem in r.json():
+		print elem["name"]
 		name=elem["name"]
 		x=elem["coords"]["x"]
 		y=elem["coords"]["y"]
@@ -213,15 +224,19 @@ def edsm_worker(system):
 		l[name]={ "x": x, "y": y,"z": z} 
 		
 	#n = []
-	del userstars[:]
+	del this.userstars[:]
 	
 	for key, value in l.iteritems():
 		#n.append({ "name": key, "x": value["x"],"y": value["y"],"z": value["z"]})
-		userstars.append({ "name": key, "x": value["x"],"y": value["y"],"z": value["z"]})
+		this.userstars.append({ "name": key, "x": value["x"],"y": value["y"],"z": value["z"]})
 		
-	this.nearest,this.distance = findNearest(this.jumpsystem,userstars)
+	print "in worker pre find"	
+	print this.jumpsystem
 	
-	dumpUserStars()
+	this.nearest,this.distance = findNearest(this.jumpsystem,this.userstars)
+	
+	
+	dumpUserStars(this.userstars)
 	
 	this.frame.event_generate('<<NeutronData>>', when='tail')
 	return
@@ -265,8 +280,12 @@ def setNearest(start,end=None):
 		print "Not in bubble or colonia"
 		#we will display something right away
 		#and then send of a background query to EDSM
-		this.nearest,this.distance = findNearest(jumpSystem,userstars)
+		print jumpSystem
+		this.nearest,this.distance = findNearest(jumpSystem,this.userstars)
+		
 		this.jumpsystem=jumpSystem
+		print this.jumpsystem
+		print "init thread"
 		initThread(jumpSystem)
 		
 	print this.nearest + " " + str(this.distance)
@@ -330,7 +349,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 			this.jumpsystem = { "x": entry["StarPos"][0], "y": entry["StarPos"][1], "z": entry["StarPos"][2], "name": entry["StarSystem"] }
 			setNearest(this.lastsystem,this.jumpsystem)
 			# we have jumped
-			this.lastsystem = this.jumpSystem
+			this.lastsystem = this.jumpsystem
 			
 	
 	
