@@ -325,10 +325,13 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 		
 		print "StartJump"
 		#if the last system was in the bubble then we can wait
-		
+		print system
+		print entry
 		try:
 			##
-			this.jumpsystem = edsmGetSystem(system)	
+			print "event[StarSystem]"
+			print entry["StarSystem"]
+			this.jumpsystem = edsmGetSystem(entry["StarSystem"])	
 			this.foundsystem = True
 			setNearest(this.lastsystem,this.jumpsystem)
 			#we have jumped 
